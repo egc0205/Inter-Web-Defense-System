@@ -1,0 +1,9 @@
+{
+  "by_destination": {
+    "192.168.10.50": ["205.174.165.68"]
+  },
+  "global": [],
+  "trusted_proxies": [],
+  "ua_window_seconds": 60,
+  "ua_min_distinct": 4
+}
