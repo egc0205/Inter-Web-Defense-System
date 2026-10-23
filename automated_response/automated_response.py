@@ -3,16 +3,13 @@ import asyncio
 
 # ---- Pipeline ---------------------------------------------------------------
 async def run_actions(response_codes, severity):
-    """
-        Run each response code's action in order.
-
-        Returns the list of codes that failed (empty if everything succeeded).
-    """
+        #Run each response code's action in order.
+        #Returns the list of codes that failed (empty if everything succeeded)
     failed = []
     for code in response_codes:
         action = PLAYBOOKS.get(code)
         if action is None:
-            print(f"run_actions: unknown response code {code!r}, skipping")
+            print(f"run_actions: unknown response code {code}, skipping")
             failed.append(code)
             continue
         try:
@@ -23,11 +20,8 @@ async def run_actions(response_codes, severity):
     return failed
 
 async def run_automated_response(alert):
-    """
-        Entry point: run the full automated response and wait for it to finish.
-
-        Returns (True, []) if every action succeeded, or (False, [failed codes]).
-    """
+       #Entry point: run the full automated response and wait for it to finish.
+        #Returns (True, []) if every action succeeded, or (False, [failed codes]).
     await send_alert(alert["rule_id"], alert["severity"], alert["message"])
     failed = await run_actions(alert["response_codes"], alert["severity"])
     return {
