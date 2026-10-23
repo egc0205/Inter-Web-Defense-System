@@ -1,0 +1,7 @@
+{
+  "gateways": ["192.168.10.1"],
+  "known_bindings": {},
+  "max_ips_per_mac": 2,
+  "reply_window_seconds": 30,
+  "min_unsolicited_replies": 10
+}

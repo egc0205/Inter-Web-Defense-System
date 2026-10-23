@@ -1,0 +1,5 @@
+{
+  "trusted_resolvers": ["192.168.10.3", "192.168.10.1"],
+  "internal_domains": ["testbed1.ca"],
+  "conflict_window_seconds": 5
+}
