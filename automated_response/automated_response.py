@@ -72,7 +72,7 @@ async def enable_syn_cookies(severity):
 async def block_protocol_rate(severity):
     print("Blocking protocol rate")
 
-#Not yet listed yet, but just wanted to prep since these are common responses. 
+#Not yet listed yet by any detection rule set, but just wanted to prep since these are common responses. 
 
 async def quarantine_file(severity):
     print("Quarantining malicious file")
@@ -89,7 +89,7 @@ async def revoke_sessions(severity):
 async def pull_email(severity):
     print("Pulling malicious email from user mailboxes")
     
-# ---- Playbooks: threat type -> ordered actions ------------------------------
+# ---- Playbooks: threat type tied to action function ------------------------------
 
 PLAYBOOKS = {
     "ENABLE_RATE_LIMITING": rate_limit,
@@ -98,4 +98,11 @@ PLAYBOOKS = {
     "ENABLE_SYN_COOKIES": enable_syn_cookies,
     "CHALLENGE_ENDPOINT": challenge_endpoint,
     "BLOCK_PROTOCOL_RATE": block_protocol_rate,
+    "BLOCK_IP": block_ip,
+    "OPEN_TICKET": open_ticket,
+    "QUARANTINE_FILE": quarantine_file,
+    "ISOLATE_HOST": isolate_host,
+    "DISABLE_ACCOUNT": disable_account,
+    "REVOKE_SESSION": revoke_sessions,
+    "PULL_EMAIL": pull_email,
 }
