@@ -2,7 +2,7 @@ import asyncio
 
 
 # ---- Pipeline ---------------------------------------------------------------
-async def run_actions(response_codes, severity):
+async def run_actions(response_codes, alert):
         #Run each response code's action in order.
         #Returns the list of codes that failed (empty if everything succeeded)
     failed = []
@@ -13,7 +13,7 @@ async def run_actions(response_codes, severity):
             failed.append(code)
             continue
         try:
-            await action(severity)
+            await action(alert)
         except Exception as exc:
             print(f"run_actions: {code} failed: {exc}")
             failed.append(code)
@@ -23,7 +23,7 @@ async def run_automated_response(alert):
        #Entry point: run the full automated response and wait for it to finish.
         #Returns (True, []) if every action succeeded, or (False, [failed codes]).
     await send_alert(alert["rule_id"], alert["severity"], alert["message"])
-    failed = await run_actions(alert["response_codes"], alert["severity"])
+    failed = await run_actions(alert["response_codes"], alert)
     return {
         "rule_id": alert["rule_id"],
         "severity": alert["severity"],
@@ -46,47 +46,47 @@ RATE_LIMITS = {"Low": 500, "Medium": 200, "High": 100, "Critical": 25}
 
 # ---- Response actions (print only for now) ----------------------------------
 
-async def rate_limit(severity):
+async def rate_limit(alert):
     #Severity defaults to medium if theres an error.
-    limit = RATE_LIMITS.get(severity, RATE_LIMITS["Medium"])
-    print(f"rate_limit: capping each source at {limit} req/s (severity={severity})")
+    limit = RATE_LIMITS.get(alert["severity"], RATE_LIMITS["Medium"])
+    print(f"rate_limit: capping each source at {limit} req/s (severity={alert["severity"]})")
 
-async def open_ticket(severity):
+async def open_ticket(alert):
     print("Opening incident ticket")
 
-async def notify_oncall(severity):
+async def notify_oncall(alert):
     print("Notifying On Call SOC")
 
-async def drop_connections(severity):
+async def drop_connections(alert):
     print("Dropping current connections")
 
-async def block_ip(severity):
+async def block_ip(alert):
     print("Blocking offending source IPs")
 
-async def challenge_endpoint(severity):
+async def challenge_endpoint(alert):
     print("Enabling captchas to challenge endpoints")
 
-async def enable_syn_cookies(severity):
+async def enable_syn_cookies(alert):
     print("Enabling SYN cookies to absorb the SYN flood")
 
-async def block_protocol_rate(severity):
+async def block_protocol_rate(alert):
     print("Blocking protocol rate")
 
 #Not yet listed yet by any detection rule set, but just wanted to prep since these are common responses. 
 
-async def quarantine_file(severity):
+async def quarantine_file(alert):
     print("Quarantining malicious file")
 
-async def isolate_host(severity):
+async def isolate_host(alert):
     print("Isolating host from the network")
 
-async def disable_account(severity):
+async def disable_account(alert):
     print("Disabling compromised account")
 
-async def revoke_sessions(severity):
+async def revoke_sessions(alert):
     print("Revoking active sessions for the affected account")
 
-async def pull_email(severity):
+async def pull_email(alert):
     print("Pulling malicious email from user mailboxes")
     
 # ---- Playbooks: threat type tied to action function ------------------------------
