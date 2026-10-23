@@ -1,0 +1,10 @@
+line,uid,label,note
+1,CsynB01,BENIGN,normal lookup
+2,CsynB01,BENIGN,"Zeek duplicate line, same answer"
+3,CsynB02,BENIGN,company domain -> internal IP is fine
+4,CsynB03,BENIGN,"CDN, multiple IPs"
+5,CsynA01,DNS Spoofing,fake answer wins the race
+6,CsynA01,DNS Spoofing,real answer arrives second
+7,CsynA02,DNS Spoofing,rogue server answers
+8,CsynA03,DNS Spoofing,rogue server answers again
+9,CsynA04,DNS Spoofing,public domain -> internal IP

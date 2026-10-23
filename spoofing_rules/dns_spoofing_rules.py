@@ -207,7 +207,7 @@ def run_dns_rules(events, config=None):
 # ---------------------------------------------------------- pipeline / CLI
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, ".."))
-DEFAULT_LOG = os.path.join(REPO, "sample_logs", "dns_spoofing_synthetic", "dns.log")
+DEFAULT_LOG = os.path.join(HERE, "dns_synthetic.log")   # hand-made test data (no real DNS spoofing capture yet)
 DEFAULT_CONFIG = os.path.join(HERE, "dns_config.json")
 REQUIRED_FIELDS = ["id.orig_h", "id.resp_h", "id.resp_p", "trans_id", "query"]
 

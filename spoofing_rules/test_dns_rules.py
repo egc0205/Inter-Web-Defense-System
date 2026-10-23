@@ -6,7 +6,7 @@ Tests for the DNS spoofing rules. Run from anywhere:
 Checks:
   1. Real traffic (ddos, portscan, web_attacks dns.log) has no DNS spoofing
      -> must give 0 alerts (false-alarm check on ~29,000 real DNS events)
-  2. dns_spoofing_synthetic/ : hand-made attacks -> DNS-001, 002 and 003 must
+  2. dns_synthetic.log (+ dns_synthetic_ground_truth.csv) : hand-made attacks -> DNS-001, 002 and 003 must
      each fire, and no alert may point at a benign line
      (no real DNS spoofing capture yet; swap in real data when we have it)
 Exit code 1 if anything fails.
@@ -43,9 +43,8 @@ for folder in ("ddos", "portscan", "web_attacks"):
 print(f"   ({total} real DNS events checked in total)\n")
 
 # 2. Synthetic attacks
-folder = os.path.join(LOGS, "dns_spoofing_synthetic")
-events = list(dr.read_events(os.path.join(folder, "dns.log")))
-truth = {r["uid"]: r["label"] for r in csv.DictReader(open(os.path.join(folder, "ground_truth.csv")))}
+events = list(dr.read_events(os.path.join(HERE, "dns_synthetic.log")))
+truth = {r["uid"]: r["label"] for r in csv.DictReader(open(os.path.join(HERE, "dns_synthetic_ground_truth.csv")))}
 alerts = dr.run_dns_rules(events, config)
 print(f"Synthetic: {len(events)} events, {sum(v != 'BENIGN' for v in truth.values())} attack connections")
 for a in alerts:
