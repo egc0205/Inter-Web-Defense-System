@@ -14,4 +14,4 @@ We are still working on making the final implementation, so we do not have insta
 We are still working on making the final implementation, so we do not have installation instructions for now.
 
 # Incomplete Features
-So far most of the features are unfinished. The log parsing script is not complete, it needs to be edited to output specific log information that each of the detection scripts will need. All of our detection scripts are currently unfinished, but we have rules for the phishing, HTTP header spoofing, injection, and DDoS scripts laid out. Our automated response is incomplete, but has a scaffolding set up.   
+So far most of the features are unfinished. The log parsing script is not complete, it needs to be edited to output specific log information that each of the detection scripts will need. Our DDoS and phishing scripts are unfinished, but we have rules laid out for them. Our automated response is incomplete, but has a scaffolding set up.   
