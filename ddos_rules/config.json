@@ -1,5 +1,10 @@
 {
+  "_note": "Settings for the DDoS rules. JSON has no comments, so every key starting with _ is a note and is ignored by the code. Defaults come from section 2 of DDoS Detection Rules.pdf.",
+
+  "_note_protected_servers": "Servers we defend, as IPs or CIDR ranges (e.g. \"192.168.10.50\" or \"192.168.10.0/24\"). Empty list = every private (internal) address. Traffic to anything else, like users browsing the internet, is ignored.",
   "protected_servers": [],
+
+  "_note_enabled_rules": "Rules to run. Remove an id to turn that rule off.",
   "enabled_rules": [
     "DDOS-001",
     "DDOS-002",
@@ -10,51 +15,69 @@
     "DDOS-007",
     "DDOS-008"
   ],
+
+  "_note_escalation_factor": "Rules with a severity range (001, 002, 004) use the higher level once the count reaches this many times the threshold.",
   "escalation_factor": 5,
+
+  "_note_max_uids": "Most connection uids to list in each alert's details. null = list them all.",
   "max_uids": null,
+
   "DDOS-001": {
+    "_note": "Single-source HTTP flood (http.log): one IP sends at least threshold requests to one server within window_seconds.",
     "window_seconds": 10,
     "threshold": 100
   },
+
   "DDOS-002": {
+    "_note": "Distributed HTTP flood (http.log): one server gets at least threshold requests from at least min_sources different IPs within window_seconds.",
     "window_seconds": 10,
     "threshold": 500,
     "min_sources": 20
   },
+
   "DDOS-003": {
+    "_note": "SYN flood (conn.log): at least threshold TCP connection attempts to one server within window_seconds. Each attempt counts as one SYN.",
     "window_seconds": 10,
     "threshold": 200
   },
+
   "DDOS-004": {
+    "_note": "URI hammering (http.log): at least threshold requests to one URI (e.g. /login) from at least min_sources different IPs within window_seconds.",
     "window_seconds": 30,
     "threshold": 300,
     "min_sources": 10
   },
+
   "DDOS-005": {
+    "_note": "UDP / ICMP flood (conn.log): at least threshold packets to one server within window_seconds, and at least baseline_multiplier times its normal rate. Waits for min_history_seconds of log first so it has a normal rate to compare against.",
     "window_seconds": 10,
     "threshold": 1000,
     "baseline_multiplier": 10,
     "min_history_seconds": 60
   },
+
   "DDOS-006": {
+    "_note": "Error-rate spike (http.log): at least error_ratio of a server's requests get a 5xx response within window_seconds, with at least min_requests requests. Alert only, no action.",
     "window_seconds": 60,
     "min_requests": 20,
     "error_ratio": 0.5
   },
+
   "DDOS-007": {
+    "_note": "Traffic spike vs baseline (http.log): requests per minute to a server are above the average of the previous history_minutes plus std_devs standard deviations, and at least min_requests. Needs min_history_minutes of history first. Alert only, no action.",
     "window_seconds": 60,
     "history_minutes": 10,
     "min_history_minutes": 2,
     "std_devs": 3,
     "min_requests": 600
   },
+
   "DDOS-008": {
+    "_note": "Slow attack, Slowloris-style (conn.log): at least threshold connections to one server within window_seconds that last at least min_duration seconds or never close (Zeek conn_state in open_states), from at most max_sources IPs.",
     "window_seconds": 300,
     "threshold": 50,
     "max_sources": 3,
     "min_duration": 60,
-    "open_states": [
-      "S1"
-    ]
+    "open_states": ["S1"]
   }
 }
