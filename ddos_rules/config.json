@@ -1,0 +1,60 @@
+{
+  "protected_servers": [],
+  "enabled_rules": [
+    "DDOS-001",
+    "DDOS-002",
+    "DDOS-003",
+    "DDOS-004",
+    "DDOS-005",
+    "DDOS-006",
+    "DDOS-007",
+    "DDOS-008"
+  ],
+  "escalation_factor": 5,
+  "max_uids": null,
+  "DDOS-001": {
+    "window_seconds": 10,
+    "threshold": 100
+  },
+  "DDOS-002": {
+    "window_seconds": 10,
+    "threshold": 500,
+    "min_sources": 20
+  },
+  "DDOS-003": {
+    "window_seconds": 10,
+    "threshold": 200
+  },
+  "DDOS-004": {
+    "window_seconds": 30,
+    "threshold": 300,
+    "min_sources": 10
+  },
+  "DDOS-005": {
+    "window_seconds": 10,
+    "threshold": 1000,
+    "baseline_multiplier": 10,
+    "min_history_seconds": 60
+  },
+  "DDOS-006": {
+    "window_seconds": 60,
+    "min_requests": 20,
+    "error_ratio": 0.5
+  },
+  "DDOS-007": {
+    "window_seconds": 60,
+    "history_minutes": 10,
+    "min_history_minutes": 2,
+    "std_devs": 3,
+    "min_requests": 600
+  },
+  "DDOS-008": {
+    "window_seconds": 300,
+    "threshold": 50,
+    "max_sources": 3,
+    "min_duration": 60,
+    "open_states": [
+      "S1"
+    ]
+  }
+}
