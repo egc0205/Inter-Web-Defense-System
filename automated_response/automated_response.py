@@ -72,6 +72,9 @@ async def enable_syn_cookies(alert):
 async def block_protocol_rate(alert):
     print("Blocking protocol rate")
 
+async def alert_only(alert):
+    print("Security alert sent")
+
 #Not yet listed yet by any detection rule set, but just wanted to prep since these are common responses. 
 
 async def quarantine_file(alert):
@@ -98,6 +101,7 @@ PLAYBOOKS = {
     "ENABLE_SYN_COOKIES": enable_syn_cookies,
     "CHALLENGE_ENDPOINT": challenge_endpoint,
     "BLOCK_PROTOCOL_RATE": block_protocol_rate,
+    "ALERT_ONLY": alert_only,
     "BLOCK_IP": block_ip,
     "OPEN_TICKET": open_ticket,
     "QUARANTINE_FILE": quarantine_file,
