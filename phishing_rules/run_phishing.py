@@ -42,7 +42,7 @@ def setup_automated_response(console_log, responses):
                     "alert_id": alert.get("alert_id"),
                     "rule_id": alert.get("rule_id"),
                     "status": "error",
-                    "error": "f{type(exc).__name__}: {exc}",
+                    "error": f"{type(exc).__name__}: {exc}"
                 }
 
         responses.append(result)
@@ -78,7 +78,7 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     responses = []
-    responder, loop, console = None
+    responder, loop, console = None, None, None
 
     if not arguments.no_respond:
         console = open(os.path.join(OUTPUT_DIR, "response_console.log"), "w", encoding="utf-8")
