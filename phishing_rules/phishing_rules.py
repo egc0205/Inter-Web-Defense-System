@@ -14,7 +14,7 @@ with open(os.path.join(HERE, "domain_names.json"), encoding="utf-8") as f:
 
 # Since rules may flag emails without malware, they should be kept open for review
 RESPONSE_CODES = {
-    "High": ["NOTIFY_ONCALL", "OPEN_TICKET"],
+    "High": ["PULL_EMAIL", "NOTIFY_ONCALL", "OPEN_TICKET"],
     "Medium": ["OPEN_TICKET"],
     "Low": [],
 }
