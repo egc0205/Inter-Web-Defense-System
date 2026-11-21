@@ -5,7 +5,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 
-from phishing_rules import RULES
+from phishing_rules import RULES, RESPONSE_CODES
 
 # Read emails records from JSONL file
 def read_emails(path):
@@ -47,7 +47,7 @@ def create_alert(email, rule, evidence):
         "key": email_id,
         "evidence_count": evidence.get("count", 1),
         "message": f"{rule['name']} detected in email {email_id}",
-        "response_codes": list(rule["response_codes"]),
+        "response_codes": list(RESPONSE_CODES[rule["severity"]]),
         "details": {
             "email_id": email.get("email_id"),
             "sender": email.get("from"),
