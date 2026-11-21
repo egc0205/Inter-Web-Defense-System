@@ -95,9 +95,8 @@ def capture(fn, *args):
 
 #Got help with claude for structure purposes and actually understanding
 #How to make this app actually work with Shuffle (hardest part, required like 5 hours with claude to actually understand how it works)
-#Essentially had claude generate a template, used it to help define my own template
-#with our built functions. Definitely want to be clear about my usage, but 
-#also want to be clear I didnt generate code to directly use, used it to actually understand and base implementation off of it, especially with the kind of shocking lack of documentation for this online (unless i just missed it somewhere)
+#Essentially had claude generate a template, used it to help define my own template that acutally implements our repo's functions
+
 class IWDS(AppBase):
     __version__ = "1.0.0"
     app_name = "iwds"
