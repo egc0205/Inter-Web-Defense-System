@@ -22,7 +22,7 @@ IWDS is a set of rule-based detectors (ARP, DNS, HTTP, DDoS, injection and phish
 
 ## Disclaimer
 
-Avoided using generative AI throughout the process, but a lot of the issues that came up with Docker were not very well documented online in forums. Utilized Claude to help troubleshoot issues as they came up and help come up with code revisions where something wasn't working. As a result, I also used Claude to help format the steps to boot the project, but most importantly, a troubleshooting section at the bottom in case you come across the same... large.. quantity of issues I came across while integrating the app with Shuffle.
+Avoided using generative AI throughout the process, but a lot of the issues that came up with Docker (and especially using it with Shuffler) were not very well documented online in forums. Utilized Claude to help troubleshoot issues as they came up and help come up with code revisions where something wasn't working. As a result, I also used Claude to help format the steps to boot the project, but most importantly, a troubleshooting section at the bottom in case you come across the same... large.. quantity of issues I came across while integrating the app with Shuffle.
 
 ---
 
