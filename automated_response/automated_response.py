@@ -1,55 +1,51 @@
 import asyncio
 
 
-# ---- Pipeline ---------------------------------------------------------------
 async def run_actions(response_codes, alert):
-        #Run each response code's action in order.
-        #Returns the list of codes that failed (empty if everything succeeded)
-    failed = []
+    #Run each response code's action in order.
+    #Returns one result per code, status is "executed" or "failed"
+    results = []
     for code in response_codes:
         action = PLAYBOOKS.get(code)
         if action is None:
             print(f"run_actions: unknown response code {code}, skipping")
-            failed.append(code)
+            results.append({"code": code, "status": "failed", "reason": "unknown response code"})
             continue
         try:
             await action(alert)
+            results.append({"code": code, "status": "executed"})
         except Exception as exc:
             print(f"run_actions: {code} failed: {exc}")
-            failed.append(code)
-    return failed
+            results.append({"code": code, "status": "failed", "reason": str(exc)})
+    return results
 
 async def run_automated_response(alert):
-       #Entry point: run the full automated response and wait for it to finish.
-        #Returns (True, []) if every action succeeded, or (False, [failed codes]).
+    #Success is True only if every Action ran, failed_actions lists the codes that didnt
     await send_alert(alert["rule_id"], alert["severity"], alert["message"])
-    failed = await run_actions(alert["response_codes"], alert)
+    actions = await run_actions(alert["response_codes"], alert)
+    failed = [a["code"] for a in actions if a["status"] == "failed"]
     return {
         "rule_id": alert["rule_id"],
         "severity": alert["severity"],
         "success": len(failed) == 0,
         "failed_actions": failed,
+        "actions": actions,
     }
 
-
-# ---- Alerting ---------------------------------------------------------------
 
 async def send_alert(rule_id, severity, message):
     print(f"send_alert: [{severity}] {rule_id}: {message}")
 
 
-
-# ---- Severity tuning --------------------------------------------------------
-# Basically a place to determine how we should respond to something based on severity
-
+#Basically a place to determine how we should respond to something based on severity
 RATE_LIMITS = {"Low": 500, "Medium": 200, "High": 100, "Critical": 25}
 
-# ---- Response actions (print only for now) ----------------------------------
+#Response actions (print only for now)
 
 async def rate_limit(alert):
     #Severity defaults to medium if theres an error.
     limit = RATE_LIMITS.get(alert["severity"], RATE_LIMITS["Medium"])
-    print(f"rate_limit: capping each source at {limit} req/s (severity={alert["severity"]})")
+    print(f"rate_limit: capping each source at {limit} req/s (severity={alert['severity']})")
 
 async def open_ticket(alert):
     print("Opening incident ticket")
@@ -75,7 +71,7 @@ async def block_protocol_rate(alert):
 async def alert_only(alert):
     print("Security alert sent")
 
-#Not yet listed yet by any detection rule set, but just wanted to prep since these are common responses. 
+#Not yet listed yet by any detection rule set, but just wanted to prep since these are common responses.
 
 async def quarantine_file(alert):
     print("Quarantining malicious file")
@@ -91,8 +87,6 @@ async def revoke_sessions(alert):
 
 async def pull_email(alert):
     print("Pulling malicious email from user mailboxes")
-    
-# ---- Playbooks: threat type tied to action function ------------------------------
 
 PLAYBOOKS = {
     "ENABLE_RATE_LIMITING": rate_limit,

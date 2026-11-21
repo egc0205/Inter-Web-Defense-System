@@ -1,0 +1,1 @@
+shuffle_sdk==0.0.40

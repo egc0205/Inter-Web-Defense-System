@@ -1,0 +1,39 @@
+app_version: 1.0.0
+name: iwds
+description: Inter-Web-Defense-System. Runs the IWDS detection rules on a log and the automated response for each alert.
+contact_info:
+  name: IWDS team
+actions:
+  - name: detect
+    description: Parse a log and run the detection rules for its type. Returns the alerts.
+    parameters:
+      - name: log_type
+        description: arp, dns, http, ddos, injection or phishing
+        required: true
+        schema:
+          type: string
+      - name: log_data
+        description: The log events (for ddos the Zeek http.log)
+        required: true
+        schema:
+          type: string
+      - name: log_data_2
+        description: Only for ddos, the Zeek conn.log
+        required: false
+        schema:
+          type: string
+    returns:
+      schema:
+        type: string
+
+  - name: respond
+    description: Runs send_alert and every response code for one alert. Use alert = $detect.alerts.#
+    parameters:
+      - name: alert
+        description: One alert (JSON)
+        required: true
+        schema:
+          type: string
+    returns:
+      schema:
+        type: string
