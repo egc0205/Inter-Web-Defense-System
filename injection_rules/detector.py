@@ -13,6 +13,8 @@ from rules import (RULES, CAMPAIGN_RULE, CAMPAIGN_WINDOW_SECONDS, CAMPAIGN_MIN_H
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+PARSED_DIR = os.path.join(REPO, "log_parsing", "parsed_logs", "injection", "http")
+PARSED_HTTP = os.path.join(PARSED_DIR, "web_attacks_parsed.jsonl")
 PARSER_TIME_FIELD = "date and time (utc)"
 PARSER_TIME_FORMAT = "%Y-%m-%d %I:%M:%S %p"
 
@@ -158,3 +160,9 @@ def detect(log_path, config=None, on_alert=None):
         with contextlib.redirect_stdout(io.StringIO()):
             parse_log(log_path, parsed, REQUIRED_FIELDS, True)
         return run_injection_rules(list(read_events(parsed)), config, on_alert)
+
+
+def load_parsed_logs(path=PARSED_HTTP):
+    if not os.path.exists(path):
+        return None
+    return list(read_events(path))
