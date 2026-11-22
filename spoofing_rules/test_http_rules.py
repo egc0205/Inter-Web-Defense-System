@@ -1,7 +1,7 @@
 """
 Tests for the HTTP header spoofing rules. Run from anywhere:
 
-    python spoofing_rules/http_spoofing/test_http_rules.py
+    python spoofing_rules/test_http_rules.py
 
 Checks, against the answer keys in sample_logs/:
   1. header_spoofing/            Expected (10 attacks, 6 benign)
@@ -79,8 +79,8 @@ failed |= not ok
 print(f"{'PASS' if ok else 'FAIL'}  header_spoofing sample (through log_parser.py): same alerts as raw log")
 
 # 2. synthetic cases
-if os.path.isdir(os.path.join(LOGS, "header_spoofing_synthetic")):
-    events, truth = load("header_spoofing_synthetic")
+if os.path.isdir(os.path.join(LOGS, "header_spoofing", "header_spoofing_synthetic")):
+    events, truth = load(os.path.join("header_spoofing", "header_spoofing_synthetic"))
     check("header_spoofing_synthetic", events, truth, SYN_CONFIG)
 else:
     print("SKIP  header_spoofing_synthetic (folder not found)")

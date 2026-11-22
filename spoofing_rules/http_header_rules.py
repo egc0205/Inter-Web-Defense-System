@@ -8,7 +8,7 @@ Output: alert dicts in the Detection Rules -> Automated Response format.
   HTTP-003  Rapid User-Agent switching from one source (low severity)
   HTTP-004  Forged client-IP headers (X-Forwarded-For, X-Real-IP, Forwarded)
 
-Run it:     python spoofing_rules/http_spoofing/http_header_rules.py   (see README.md)
+Run it:     python spoofing_rules/http_header_rules.py   (see README.md)
 From code:  run_http_header_rules(events, config) -> list of alerts
 
 Required event fields (needs to function) : ts (or the parser's "date and time (utc)"), uid, id.orig_h, id.resp_h
@@ -294,7 +294,7 @@ def run_http_header_rules(events, config=None):
 
 # ---------------------------------------------------------- pipeline / CLI
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.abspath(os.path.join(HERE, "..", ".."))      # repo root
+REPO = os.path.abspath(os.path.join(HERE, ".."))      # repo root
 DEFAULT_LOG = os.path.join(REPO, "sample_logs", "header_spoofing", "zeek", "http.log")
 DEFAULT_CONFIG = os.path.join(HERE, "config.json")
 # Only fields every rule truly needs.
