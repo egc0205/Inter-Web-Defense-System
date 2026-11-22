@@ -3,8 +3,8 @@ DDoS detection rules (DDOS-001 .. DDOS-008) for the Inter-Web-Defense-System pip
 Implements "DDoS Detection Rules.pdf" in this folder.
 
 Input : parsed Zeek http.log and/or conn.log events (one dict per event, Zeek JSON
-        field names). Works on raw logs and on log_parser.py output (which swaps
-        "ts" for a "date and time (utc)" string).
+        field names). By default these are the files log_parser.py writes to
+        log_parsing/parsed_logs/ddos/. Raw Zeek logs work too.
 Output: alert dicts in the Detection Rules -> Automated Response format
         (rule_id, attack_type, severity, timestamp, key, evidence_count, message,
         response_codes, details), ready for automated_response.run_automated_response().
@@ -24,7 +24,8 @@ for a full window. The alert's timestamp is when the episode started, the messag
 reports the peak window, and evidence_count / details.uids cover the whole episode.
 
 From code:  run_ddos_rules(http_events, conn_events, config) -> list of alerts
-            detect(http_log_path, conn_log_path, config)    -> same, via log_parser.py
+            load_parsed_logs()                              -> events from parsed_logs/ddos/
+            detect(http_log_path, conn_log_path, config)    -> parses raw logs, then runs
 Run it:     python ddos_rules/run_ddos.py --help
 """
 
@@ -77,8 +78,7 @@ PARSER_TIME_FIELD = "date and time (utc)"
 PARSER_TIME_FORMAT = "%Y-%m-%d %I:%M:%S %p"
 
 # Response codes must match PLAYBOOKS in automated_response.py exactly.
-# ALERT_ONLY is not a playbook action: those rules send [] (send_alert() still logs
-# the alert) and record "ALERT_ONLY" in details["response"].
+# ALERT_ONLY means "log it, take no action"; the responder has a playbook entry for it.
 RULES = {
     "DDOS-001": {"name": "Single-source HTTP flood", "log": "http",
                  "severity": ("Medium", "High"), "response_codes": ["ENABLE_RATE_LIMITING"]},
@@ -187,11 +187,8 @@ class ProtectedServers:
 
 def make_alert(rule_id, severity, ts, key, uids, message, details, max_uids=None):
     rule = RULES[rule_id]
-    codes = [c for c in rule["response_codes"] if c != ALERT_ONLY]
     shown = uids if max_uids is None else uids[:max_uids]
     out_details = {"uid": uids[0] if uids else None, "uids": shown}
-    if ALERT_ONLY in rule["response_codes"]:
-        out_details["response"] = ALERT_ONLY
     out_details.update(details)
     return {
         "alert_id": uuid.uuid4().hex[:12],
@@ -202,7 +199,7 @@ def make_alert(rule_id, severity, ts, key, uids, message, details, max_uids=None
         "key": key,
         "evidence_count": len(uids),
         "message": message,
-        "response_codes": codes,
+        "response_codes": list(rule["response_codes"]),
         "details": out_details,
     }
 
@@ -752,25 +749,45 @@ def read_events(path):
                 continue
 
 
+# Where log_parser.py writes the DDoS logs when run as:  python log_parsing/log_parser.py ddos
+PARSED_DIR = os.path.join(REPO, "log_parsing", "parsed_logs", "ddos")
+PARSED_HTTP = os.path.join(PARSED_DIR, "http", "ddos_parsed.jsonl")
+PARSED_CONN = os.path.join(PARSED_DIR, "conn", "ddos_parsed.jsonl")
+
+
+def load_parsed_logs(http_path=PARSED_HTTP, conn_path=PARSED_CONN):
+    """Reads the http and conn logs log_parser.py already parsed into parsed_logs/ddos/.
+    Returns (http_events, conn_events); either is None if its file doesn't exist yet."""
+    http_events = list(read_events(http_path)) if os.path.exists(http_path) else None
+    conn_events = list(read_events(conn_path)) if os.path.exists(conn_path) else None
+    return http_events, conn_events
+
+
 def parse_with_log_parser(path, required_fields):
-    """Runs log_parsing/log_parser.py on `path` and returns the parsed events."""
+    """Runs log_parsing/log_parser.py on one raw log and returns the parsed events,
+    without writing anything into the log_parsing folder."""
     # tempfile: log_parser.py writes to a file, so give it a temporary folder
     # that is deleted afterwards. Only needed here, so it is imported here.
     import tempfile
 
-    # log_parser: the team's parser; the real pipeline runs every log through it first
+    # log_parser: the team's parser
     sys.path.insert(0, os.path.join(REPO, "log_parsing"))
-    from log_parser import parseLog
+    import log_parser
 
     with tempfile.TemporaryDirectory() as tmp:
         parsed = os.path.join(tmp, "parsed.jsonl")
         with contextlib.redirect_stdout(io.StringIO()):
-            parseLog(path, parsed, required_fields)
+            if hasattr(log_parser, "parse_log"):
+                # Current parser: parse_log(in_path, out_path, req_fields, sort_ts)
+                log_parser.parse_log(path, parsed, required_fields, True)
+            else:
+                # Older parser (before Nov 21, 2026): parseLog(in_path, out_path, req_fields)
+                log_parser.parseLog(path, parsed, required_fields)
         return list(read_events(parsed))
 
 
 def detect(http_log=None, conn_log=None, config=None, on_alert=None):
-    """Parses Zeek http.log / conn.log with log_parser.py, then runs the DDoS rules."""
+    """Parses raw Zeek http.log / conn.log with log_parser.py, then runs the DDoS rules."""
     http_events = parse_with_log_parser(http_log, HTTP_REQUIRED_FIELDS) if http_log else None
     conn_events = parse_with_log_parser(conn_log, CONN_REQUIRED_FIELDS) if conn_log else None
     return run_ddos_rules(http_events, conn_events, config, on_alert)

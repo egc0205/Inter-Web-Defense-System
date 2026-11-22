@@ -1,10 +1,14 @@
 """
 DDoS pipeline: Zeek http.log + conn.log -> log_parser -> DDOS-001..008 -> automated_response
 
-    Run the ddos sample, with automated response:
+    Parse the logs, then run the rules with automated response:
+        python log_parsing/log_parser.py ddos
         python ddos_rules/run_ddos.py
 
-    Run any folder under sample_logs/:
+    By default this reads the files log_parser.py wrote to log_parsing/parsed_logs/ddos/.
+    If they aren't there yet, it parses sample_logs/ddos itself (nothing is saved).
+
+    Run any folder under sample_logs/ (parsed on the fly):
         python ddos_rules/run_ddos.py --dataset portscan
 
     Run your own logs, detection only, printing the first 3 alerts in full:
@@ -43,7 +47,8 @@ REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 # ddos_detector: the DDoS rules this script runs
-from ddos_detector import detect, read_events, run_ddos_rules  # noqa: E402
+from ddos_detector import (PARSED_DIR, detect, load_parsed_logs,  # noqa: E402
+                           read_events, run_ddos_rules)
 
 SAMPLE_LOGS = os.path.join(REPO, "sample_logs")
 DEFAULT_CONFIG = os.path.join(HERE, "config.json")
@@ -82,9 +87,9 @@ def main():
     ap = argparse.ArgumentParser(
         description="DDoS pipeline: http.log + conn.log -> log_parser -> DDOS-001..008 "
                     "-> automated_response")
-    ap.add_argument("--dataset", default="ddos",
-                    help="folder under sample_logs/ to read zeek/http.log and zeek/conn.log "
-                         "from (default: ddos)")
+    ap.add_argument("--dataset",
+                    help="folder under sample_logs/ to parse zeek/http.log and zeek/conn.log "
+                         "from, instead of reading log_parsing/parsed_logs/ddos/")
     ap.add_argument("--http", help="Zeek http.log (overrides --dataset)")
     ap.add_argument("--conn", help="Zeek conn.log (overrides --dataset)")
     ap.add_argument("--config", default=DEFAULT_CONFIG, help="rule config JSON")
@@ -97,17 +102,35 @@ def main():
                     help="print the first N alerts in full")
     args = ap.parse_args()
 
-    zeek = os.path.join(SAMPLE_LOGS, args.dataset, "zeek")
-    http_log = args.http or os.path.join(zeek, "http.log")
-    conn_log = args.conn or os.path.join(zeek, "conn.log")
-    logs = {"http": http_log if os.path.exists(http_log) else None,
-            "conn": conn_log if os.path.exists(conn_log) else None}
-    for name, path in logs.items():
-        if path is None:
-            print(f"Note: no {name}.log found ({http_log if name == 'http' else conn_log}); "
-                  f"skipping the rules that need it")
-    if not any(logs.values()):
-        sys.exit("No log files found")
+    # With no log options given, use the files log_parser.py already made
+    parsed = None
+    if not (args.dataset or args.http or args.conn or args.no_parse):
+        parsed = load_parsed_logs()
+        if parsed == (None, None):
+            print(f"No parsed logs in {PARSED_DIR} yet "
+                  f"(make them with: python log_parsing/log_parser.py ddos).\n"
+                  f"Parsing sample_logs/ddos directly instead.\n")
+            parsed = None
+        else:
+            print(f"Reading parsed logs from {PARSED_DIR}\n")
+
+    logs = {}
+    if parsed is None:
+        zeek = os.path.join(SAMPLE_LOGS, args.dataset or "ddos", "zeek")
+        http_log = args.http or os.path.join(zeek, "http.log")
+        conn_log = args.conn or os.path.join(zeek, "conn.log")
+        logs = {"http": http_log if os.path.exists(http_log) else None,
+                "conn": conn_log if os.path.exists(conn_log) else None}
+        for name, path in logs.items():
+            if path is None:
+                print(f"Note: no {name}.log found ({http_log if name == 'http' else conn_log}); "
+                      f"skipping the rules that need it")
+        if not any(logs.values()):
+            sys.exit("No log files found")
+    else:
+        for name, events in zip(("http", "conn"), parsed):
+            if events is None:
+                print(f"Note: no parsed {name} log found; skipping the rules that need it")
 
     config = {}
     if args.config and os.path.exists(args.config):
@@ -121,7 +144,9 @@ def main():
         console = open(os.path.join(OUTPUT_DIR, "response_console.log"), "w", encoding="utf-8")
         responder, loop = make_responder(console, responses)
 
-    if args.no_parse:
+    if parsed is not None:
+        alerts = run_ddos_rules(parsed[0], parsed[1], config, responder)
+    elif args.no_parse:
         http_events = list(read_events(logs["http"])) if logs["http"] else None
         conn_events = list(read_events(logs["conn"])) if logs["conn"] else None
         alerts = run_ddos_rules(http_events, conn_events, config, responder)

@@ -40,6 +40,9 @@ import os
 # sys: lets us import from other folders and set the exit code
 import sys
 
+# tempfile: a throwaway folder for log_parser.py's output, so the test leaves no files behind
+import tempfile
+
 # Don't leave __pycache__ in other team folders
 sys.dont_write_bytecode = True
 
@@ -175,6 +178,25 @@ parsed = dd.detect(os.path.join(LOGS, "ddos", "zeek", "http.log"),
 check("same alerts through log_parser.py as from the raw logs",
       summary(parsed) == summary(alerts),
       str(summary(parsed)))
+
+# Run log_parser.py the way the team does (python log_parsing/log_parser.py ddos), but into
+# a temporary folder so nothing is left behind in log_parsing/parsed_logs/
+sys.path.insert(0, os.path.join(dd.REPO, "log_parsing"))
+import log_parser  # noqa: E402
+
+if hasattr(log_parser, "parse_rule"):
+    with tempfile.TemporaryDirectory() as tmp:
+        with contextlib.redirect_stdout(io.StringIO()):
+            log_parser.parse_rule("ddos", dd.REPO, tmp)
+        from_files = dd.load_parsed_logs(
+            os.path.join(tmp, "ddos", "http", "ddos_parsed.jsonl"),
+            os.path.join(tmp, "ddos", "conn", "ddos_parsed.jsonl"))
+        from_files_alerts = dd.run_ddos_rules(*from_files)
+    check("same alerts from log_parser.py's parsed_logs/ddos files",
+          summary(from_files_alerts) == summary(alerts),
+          str(summary(from_files_alerts)))
+else:
+    print("SKIP  parsed_logs/ddos files (this log_parser.py has no parse_rule)")
 
 
 # --------------------------------------------------- 2. other samples
@@ -332,10 +354,9 @@ evs = [
     for i in range(30)
 ]
 a = rules_of(dd.run_ddos_rules(evs)).get("DDOS-006", {})
-check("20 of 30 requests are 5xx -> Medium, alert only",
+check("20 of 30 requests are 5xx -> Medium, ALERT_ONLY",
       a.get("severity") == "Medium"
-      and a.get("response_codes") == []
-      and a["details"].get("response") == "ALERT_ONLY")
+      and a.get("response_codes") == ["ALERT_ONLY"])
 
 # Only 1 out of every 3 is an error
 evs = [
@@ -363,9 +384,9 @@ spike = [
     for i in range(800)
 ]
 a = rules_of(dd.run_ddos_rules(normal + spike)).get("DDOS-007", {})
-check("800 req/min after 3 min of ~100/min -> Medium, alert only",
+check("800 req/min after 3 min of ~100/min -> Medium, ALERT_ONLY",
       a.get("severity") == "Medium"
-      and a.get("response_codes") == []
+      and a.get("response_codes") == ["ALERT_ONLY"]
       and a.get("evidence_count") == 800)
 
 # Shift everything 2 minutes earlier so only 1 minute of history comes before the spike
@@ -430,7 +451,7 @@ sys.path.insert(0, os.path.join(dd.REPO, "automated_response"))
 from automated_response import PLAYBOOKS, run_automated_response  # noqa: E402
 
 # Codes must match exactly, or the responder reports them as failed
-codes = {c for r in dd.RULES.values() for c in r["response_codes"] if c != dd.ALERT_ONLY}
+codes = {c for r in dd.RULES.values() for c in r["response_codes"]}
 unknown = codes - set(PLAYBOOKS)
 check("every response code exists in PLAYBOOKS",
       not unknown,
