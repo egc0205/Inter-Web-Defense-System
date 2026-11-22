@@ -1,0 +1,5 @@
+{
+  "campaign_window_seconds": 60,
+  "campaign_min_hits": 5,
+  "campaign_min_distinct_rules": 3
+}

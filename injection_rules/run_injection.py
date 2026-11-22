@@ -6,13 +6,16 @@ import os
 import sys
 from collections import Counter
 
+sys.dont_write_bytecode = True
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
-from detector import detect, read_events, run_injection_rules
+from detector import PARSED_HTTP, detect, load_parsed_logs, read_events, run_injection_rules
 
-DEFAULT_LOG = os.path.join(REPO, "sample_logs", "web_attacks", "zeek", "http.log")
+SAMPLE_LOGS = os.path.join(REPO, "sample_logs")
+DEFAULT_CONFIG = os.path.join(HERE, "config.json")
 OUTPUT_DIR = os.path.join(HERE, "output")
 
 
@@ -45,18 +48,28 @@ def write_jsonl(path, records):
 def main():
     ap = argparse.ArgumentParser(
         description="Injection pipeline: http.log -> log_parser -> INJ-001..010 -> automated_response")
-    ap.add_argument("log", nargs="?", default=DEFAULT_LOG)
-    ap.add_argument("--config")
+    ap.add_argument("log", nargs="?", help="Zeek http.log (overrides --dataset)")
+    ap.add_argument("--dataset", help="folder under sample_logs/ (parsed here instead of using parsed_logs/)")
+    ap.add_argument("--config", default=DEFAULT_CONFIG)
     ap.add_argument("--no-respond", action="store_true")
     ap.add_argument("--no-parse", action="store_true")
     ap.add_argument("--out", default=os.path.join(OUTPUT_DIR, "injection_alerts.jsonl"))
     ap.add_argument("--show", type=int, default=0, metavar="N")
     args = ap.parse_args()
 
-    if not os.path.exists(args.log):
-        sys.exit(f"Log file not found: {args.log}")
+    parsed = None
+    if not (args.log or args.dataset or args.no_parse):
+        parsed = load_parsed_logs()
+        if parsed is None:
+            print(f"No parsed log at {PARSED_HTTP} yet "
+                  f"(make it with: python log_parsing/log_parser.py injection).\n"
+                  f"Parsing sample_logs/web_attacks directly instead.\n")
+    log = PARSED_HTTP if parsed is not None else (
+        args.log or os.path.join(SAMPLE_LOGS, args.dataset or "web_attacks", "zeek", "http.log"))
+    if not os.path.exists(log):
+        sys.exit(f"Log file not found: {log}")
     config = {}
-    if args.config:
+    if args.config and os.path.exists(args.config):
         with open(args.config, encoding="utf-8") as f:
             config = json.load(f)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -67,12 +80,15 @@ def main():
         console = open(os.path.join(OUTPUT_DIR, "response_console.log"), "w", encoding="utf-8")
         responder, loop = make_responder(console, responses)
 
-    if args.no_parse:
-        alerts = run_injection_rules(list(read_events(args.log)), config, responder)
+    if parsed is not None:
+        alerts = run_injection_rules(parsed, config, responder)
+    elif args.no_parse:
+        alerts = run_injection_rules(list(read_events(log)), config, responder)
     else:
-        alerts = detect(args.log, config, responder)
+        alerts = detect(log, config, responder)
     write_jsonl(args.out, alerts)
 
+    print(f"Log: {log}")
     print(f"{len(alerts)} alert(s) written to {args.out}\n")
     print("Alerts by rule:")
     for rule_id, n in sorted(Counter(a["rule_id"] for a in alerts).items()):
