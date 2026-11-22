@@ -152,9 +152,9 @@ def run_injection_rules(events, config=None, on_alert=None):
 def detect(log_path, config=None, on_alert=None):
     import tempfile
     sys.path.insert(0, os.path.join(REPO, "log_parsing"))
-    from log_parser import parseLog
+    from log_parser import parse_log
     with tempfile.TemporaryDirectory() as tmp:
         parsed = os.path.join(tmp, "parsed.jsonl")
         with contextlib.redirect_stdout(io.StringIO()):
-            parseLog(log_path, parsed, REQUIRED_FIELDS)
+            parse_log(log_path, parsed, REQUIRED_FIELDS, True)
         return run_injection_rules(list(read_events(parsed)), config, on_alert)

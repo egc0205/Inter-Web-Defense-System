@@ -228,10 +228,10 @@ def detect(log_path, config):
     """Parses arp.log with log_parsing/log_parser.py, then runs the rules."""
     import tempfile
     sys.path.insert(0, os.path.join(REPO, "log_parsing"))
-    from log_parser import parseLog
+    from log_parser import parse_log
     with tempfile.TemporaryDirectory() as tmp:
         parsed = os.path.join(tmp, "parsed.jsonl")
-        parseLog(log_path, parsed, REQUIRED_FIELDS)
+        parse_log(log_path, parsed, REQUIRED_FIELDS, False)
         return run_arp_rules(list(read_events(parsed)), config)
 
 
