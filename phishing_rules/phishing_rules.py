@@ -388,11 +388,11 @@ def check_mismatched_addresses(email):
 
     # Check if two domains are related
     def check_matching_domains(domain):
-        return {
+        return (
             domain == from_domain or
                       domain.endswith("." + from_domain) or 
                       from_domain.endswith("." + domain)
-        }
+        )
 
     mismatches = []
 
@@ -481,11 +481,11 @@ def check_payment_delivery_request(email):
 
     # Common payment/delivery/document phrases
     phrases_request = ["unpaid invoice", "outstanding payment",
-                       "payment overdue", "payyment failed",
+                       "payment overdue", "payment failed",
                        "update your billing", "update your payment",
                        "confirm your payment", "delivery failed",
                        "delivery attempt", "package on hold",
-                       "shipment on hold", "confirm your delivery"
+                       "shipment on hold", "confirm your delivery",
                        "view your document", "review the attached document",
                        "shared a document", "view the attached document"]
 
@@ -507,7 +507,7 @@ def check_payment_delivery_request(email):
             break
     for phrase in phrases_action:
         if phrase in subject_body:
-            matched_request = phrase
+            matched_action = phrase
             break
 
     if not matched_request or not matched_action:
