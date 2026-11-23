@@ -24,6 +24,15 @@ IWDS is a set of rule-based detectors (ARP, DNS, HTTP, DDoS, injection and phish
 
 Avoided generative AI throughout the development, but when it came to things that were not very well documented by Shuffler/Docker, used tools to help understand and create templates/research. Utilized AI to help format and add clarity to the read me as well.
 
+Prompts:
+1. How can Docker volume bindings be configured to make a repo accessible to Shuffle apps?
+2. What are some causes of integration failures between Docker containers, Shuffle apps, and Shuffle workflow nodes?
+3. How does Shuffle get webhook data, and how can that data be accessed by other workflow actions?
+4. Can you give me some pointers on how to make this readme be more clear? (a draft of this README.md was attached)
+
+Reflection:
+These prompts all helped with understanding the technical parts of integrating IWDS with Shuffle, especially the Docker volume bindings, and how data is passed to the webhook and to other workflow nodes. The responses also helped provide some more information on possible issues that might need to be troubleshooted when setting up the Shuffle integration. The AI feedback also helped to make the README a lot more clear and allow for a smoother setup and also organize the information in the README better. 
+
 ---
 
 ## Requirements
